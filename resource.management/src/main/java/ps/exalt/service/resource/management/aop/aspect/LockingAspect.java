@@ -1,5 +1,6 @@
 package ps.exalt.service.resource.management.aop.aspect;
 
+import lombok.extern.log4j.Log4j2;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -9,6 +10,7 @@ import ps.exalt.service.resource.management.service.SemaphoreService;
 
 @Aspect
 @Component
+@Log4j2
 public class LockingAspect {
 
     @Autowired
@@ -16,7 +18,12 @@ public class LockingAspect {
 
     @Around("@annotation(ps.exalt.service.resource.management.aop.annotation.LockThread)")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
-        return joinPoint.proceed();
+        log.info("ask for r/w in the database");
+        this.semaphoreService.acquire();
+        Object proceed = joinPoint.proceed();
+        this.semaphoreService.release();
+        log.info("r/w in the database are done");
+        return proceed;
     }
 
 
