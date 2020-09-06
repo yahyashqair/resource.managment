@@ -29,21 +29,23 @@ public class ResourceServiceImpl implements ResourceService {
         Server server = allocateActiveServer(numberOfGiga);
         if(server != null){
             result.put("STATE","DONE");
-            result.put("SERVER","DONE");
+            result.put("SERVER",server.toString());
             return result;
         }
         server = allocateCreatingServer(numberOfGiga);
         if(server != null){
-            Spinner spinner= this.serverSpinnerMap.get(server);
-            spinner.wait();
+            Spinner spinner= this.serverSpinnerMap.get(server.getId());
+            spinner.join();
             result.put("STATE","DONE");
-            result.put("SERVER","DONE");
+            result.put("SERVER",this.serverRepository.findById(server.getId()).toString());
             return result;
         }
         // spin a server and join it ..
         Spinner spinner = this.applicationContext.getBean(Spinner.class);
+        spinner.setInitialReserve(numberOfGiga);
         spinner.run();
-        spinner.wait();
+        spinner.join();
+        result.put("STATE","DONE");
 
         return null;
     }

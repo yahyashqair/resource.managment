@@ -1,15 +1,19 @@
 package ps.exalt.service.resource.management.service;
 
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ps.exalt.service.resource.management.aop.annotation.LockThread;
+import ps.exalt.service.resource.management.aop.annotation.TimeTracking;
 import ps.exalt.service.resource.management.model.Server;
 import ps.exalt.service.resource.management.runnable.Spinner;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public interface ResourceService {
 
-    Map<Server, Spinner> serverSpinnerMap = new HashMap<>();
+    HashMap<Long, Spinner> serverSpinnerMap = new HashMap<>();
 
     Map<String,String> reserveSpace(Long numberOfGiga) throws InterruptedException;
 

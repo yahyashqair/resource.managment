@@ -18,6 +18,12 @@ import java.util.Date;
 @NoArgsConstructor
 public class Server {
 
+    public Server(Long capacity, Long free, ServerState serverState) {
+        this.capacity = capacity;
+        this.free = free;
+        this.serverState = serverState;
+    }
+
     public Server(Long capacity) {
         this.capacity = capacity;
     }

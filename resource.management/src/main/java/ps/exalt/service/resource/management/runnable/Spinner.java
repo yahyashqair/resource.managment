@@ -1,5 +1,6 @@
 package ps.exalt.service.resource.management.runnable;
 
+import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -11,7 +12,8 @@ import ps.exalt.service.resource.management.service.ResourceService;
 
 @Component
 @Scope("prototype")
-public class Spinner implements Runnable{
+@Data
+public class Spinner extends Thread{
 
     @Autowired
     private ResourceService resourceService;
@@ -19,12 +21,21 @@ public class Spinner implements Runnable{
     @Autowired
     private ServerRepository serverRepository;
 
+    private Long initialReserve = null;
+
     @SneakyThrows
     @Override
     public void run() {
         Server server = this.resourceService.spinServer();
-        this.resourceService.serverSpinnerMap.put(server,this);
-        Thread.sleep(20000);
+        if(initialReserve!=null){
+            server.setFree(server.getFree() - initialReserve);
+            this.serverRepository.save(server);
+        }
+        this.resourceService.serverSpinnerMap.put(server.getId(),this);
+        synchronized (this) {
+            this.wait(20000);
+        }
+
         server.setServerState(ServerState.ACTIVE);
         this.serverRepository.save(server);
 
