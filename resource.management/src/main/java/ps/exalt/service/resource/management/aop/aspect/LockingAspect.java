@@ -1,29 +1,27 @@
 package ps.exalt.service.resource.management.aop.aspect;
-
-import lombok.extern.log4j.Log4j2;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ps.exalt.service.resource.management.service.SemaphoreService;
 
 @Aspect
-@Component
-@Log4j2
+@Service
 public class LockingAspect {
 
-    @Autowired
-    SemaphoreService semaphoreService;
+    private final SemaphoreService semaphoreService;
 
-    @Around("@annotation(ps.exalt.service.resource.management.aop.annotation.LockThread)")
+    public LockingAspect(SemaphoreService semaphoreService) {
+        this.semaphoreService = semaphoreService;
+    }
+
+    @Around("@annotation(ps.exalt.service.resource.management.aop.annotation.Synchronized)")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("ask for r/w in the database");
+        System.out.println("require to read from the database ");
         this.semaphoreService.acquire();
         Object proceed = joinPoint.proceed();
         this.semaphoreService.release();
-        log.info("r/w in the database are done");
+        System.out.println("release to read from the database ");
         return proceed;
     }
 

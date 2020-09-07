@@ -38,6 +38,6 @@ public class Spinner extends Thread{
 
         server.setServerState(ServerState.ACTIVE);
         this.serverRepository.save(server);
-
+        this.resourceService.serverSpinnerMap.remove(server.getId());
     }
 }

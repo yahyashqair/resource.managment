@@ -3,6 +3,7 @@ package ps.exalt.service.resource.management.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import ps.exalt.service.resource.management.aop.annotation.Synchronized;
 import ps.exalt.service.resource.management.aop.annotation.TimeTracking;
 import ps.exalt.service.resource.management.enums.ServerState;
 import ps.exalt.service.resource.management.model.Server;
@@ -23,35 +24,53 @@ public class ResourceServiceImpl implements ResourceService {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Autowired
+    private ResourceService resourceService;
+
     @TimeTracking
     @Override
     public Map<String, String> reserveSpace(Long numberOfGiga) throws InterruptedException {
         Map<String, String> result = new HashMap<>();
         // try to allocate in active servers
-        Server server = allocateActiveServer(numberOfGiga);
+        Server server = this.resourceService.allocateActiveServer(numberOfGiga);
         if(server != null){
             result.put("STATE","DONE");
-            result.put("SERVER",server.toString());
             return result;
         }
-        server = allocateCreatingServer(numberOfGiga);
+        server = this.resourceService.allocateCreatingServer(numberOfGiga);
         if(server != null){
             Spinner spinner= this.serverSpinnerMap.get(server.getId());
-            spinner.join();
+            if (spinner != null) {
+                while (spinner.isAlive()) {
+                    try {
+                        spinner.join();
+                    } catch (InterruptedException e) {
+                        System.err.println("error in join a thread");
+                    }
+                }
+            }
             result.put("STATE","DONE");
-            result.put("SERVER",this.serverRepository.findById(server.getId()).toString());
             return result;
         }
         // spin a server and join it ..
         Spinner spinner = this.applicationContext.getBean(Spinner.class);
         spinner.setInitialReserve(numberOfGiga);
-        spinner.run();
-        spinner.join();
+        spinner.start();
+        if (spinner != null) {
+            while (spinner.isAlive()) {
+                try {
+                    spinner.join();
+                } catch (InterruptedException e) {
+                    // ignore
+                    System.err.println("error in join a thread");
+                }
+            }
+        }
         result.put("STATE","DONE");
-
-        return null;
+        return result;
     }
 
+    @Synchronized
     @Override
     public Server allocateActiveServer(Long numberOfGiga) {
         // get all servers
@@ -67,6 +86,7 @@ public class ResourceServiceImpl implements ResourceService {
         return null;
     }
 
+    @Synchronized
     @Override
     public Server allocateCreatingServer(Long numberOfGiga) {
         List<Server> serverList = this.serverRepository.findAllByServerState(ServerState.CREATING);
@@ -90,8 +110,4 @@ public class ResourceServiceImpl implements ResourceService {
         return server;
     }
 
-    @Override
-    public void getClientStateus(Long ClientId) {
-
-    }
 }
