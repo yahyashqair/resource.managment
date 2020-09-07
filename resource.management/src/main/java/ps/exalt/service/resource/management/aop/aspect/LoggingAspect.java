@@ -23,7 +23,7 @@ public class LoggingAspect {
 //    }
 
     //    @Around("@annotation(ps.exalt.service.resource.management.aop.annotation.TimeTracking)")
-    @Around("execution(* ps.exalt.service.resource.management.service.ResourceService.reserveSpace())")
+    @Around("@annotation(ps.exalt.service.resource.management.aop.annotation.TimeTracking)")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 

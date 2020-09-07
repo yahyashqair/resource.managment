@@ -3,6 +3,7 @@ package ps.exalt.service.resource.management.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import ps.exalt.service.resource.management.aop.annotation.TimeTracking;
 import ps.exalt.service.resource.management.enums.ServerState;
 import ps.exalt.service.resource.management.model.Server;
 import ps.exalt.service.resource.management.repository.ServerRepository;
@@ -22,6 +23,7 @@ public class ResourceServiceImpl implements ResourceService {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @TimeTracking
     @Override
     public Map<String, String> reserveSpace(Long numberOfGiga) throws InterruptedException {
         Map<String, String> result = new HashMap<>();
