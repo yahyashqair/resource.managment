@@ -1,5 +1,6 @@
 package ps.exalt.service.resource.management.service.impl;
 
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -37,10 +38,9 @@ public class ResourceServiceImpl implements ResourceService {
             result.put("STATE","DONE");
             return result;
         }
-        server = this.resourceService.allocateCreatingServer(numberOfGiga);
-        if(server != null){
-            Spinner spinner= this.serverSpinnerMap.get(server.getId());
-            if (spinner != null) {
+        Spinner spinner = this.resourceService.allocateCreatingServer(numberOfGiga);
+        System.out.println("I am waiting"+ Thread.currentThread().getName());
+        if(spinner != null){
                 while (spinner.isAlive()) {
                     try {
                         spinner.join();
@@ -48,26 +48,11 @@ public class ResourceServiceImpl implements ResourceService {
                         System.err.println("error in join a thread");
                     }
                 }
-            }
+            System.out.println("oh no, i am finished" + Thread.currentThread().getName());
             result.put("STATE","DONE");
             return result;
         }
-        // spin a server and join it ..
-        Spinner spinner = this.applicationContext.getBean(Spinner.class);
-        spinner.setInitialReserve(numberOfGiga);
-        spinner.start();
-        if (spinner != null) {
-            while (spinner.isAlive()) {
-                try {
-                    spinner.join();
-                } catch (InterruptedException e) {
-                    // ignore
-                    System.err.println("error in join a thread");
-                }
-            }
-        }
-        result.put("STATE","DONE");
-        return result;
+        return null;
     }
 
     @Synchronized
@@ -86,24 +71,40 @@ public class ResourceServiceImpl implements ResourceService {
         return null;
     }
 
+    @SneakyThrows
     @Synchronized
     @Override
-    public Server allocateCreatingServer(Long numberOfGiga) {
+    public Spinner allocateCreatingServer(Long numberOfGiga) {
         List<Server> serverList = this.serverRepository.findAllByServerState(ServerState.CREATING);
         for (Server server : serverList) {
             if (server.getFree() >= numberOfGiga) {
                 server.setFree(server.getFree() - numberOfGiga);
                 server = this.serverRepository.save(server);
-                return server;
+                return this.resourceService.serverSpinnerMap.get(server.getId());
             }
         }
-        return null;
+        // spin a server and join it ..
+        Server server = this.resourceService.spinServer(numberOfGiga);
+        Spinner spinner = this.applicationContext.getBean(Spinner.class);
+        this.resourceService.serverSpinnerMap.put(server.getId(),spinner);
+        spinner.setServerId(server.getId());
+        spinner.start();
+        return spinner;
     }
 
     @Override
-    public Server spinServer() throws InterruptedException {
+    @Synchronized
+    public void serverIsReady(Long serverId) throws InterruptedException {
+        Server server = this.serverRepository.findById(serverId).get();
+        server.setServerState(ServerState.ACTIVE);
+        this.serverRepository.save(server);
+    }
+
+
+    @Override
+    public Server spinServer(long initialReserve) throws InterruptedException {
         Server server = new Server();
-        server.setFree(100L);
+        server.setFree(100L - initialReserve);
         server.setCapacity(100L);
         server.setServerState(ServerState.CREATING);
         server = this.serverRepository.save(server);

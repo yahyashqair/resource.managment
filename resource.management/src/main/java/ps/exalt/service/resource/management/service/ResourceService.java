@@ -15,8 +15,10 @@ public interface ResourceService {
 
     Server allocateActiveServer(Long numberOfGiga);
 
-    public Server allocateCreatingServer(Long numberOfGiga);
+    public Spinner allocateCreatingServer(Long numberOfGiga);
 
-    Server spinServer() throws InterruptedException;
+    Server spinServer(long initialReserve) throws InterruptedException;
+
+    void serverIsReady(Long serverId) throws InterruptedException;
 
 }

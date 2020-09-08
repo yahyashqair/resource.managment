@@ -27,6 +27,7 @@ public class ResourceController {
 
     @GetMapping("/{numberOfGiga}")
     public Map<String, String> reserveResources(@PathVariable("numberOfGiga") Long numberOfGiga) throws InterruptedException {
+        System.out.println("new request just arrived");
         return this.resourceService.reserveSpace(numberOfGiga);
     }
 

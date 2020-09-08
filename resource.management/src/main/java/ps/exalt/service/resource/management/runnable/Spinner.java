@@ -21,23 +21,14 @@ public class Spinner extends Thread{
     @Autowired
     private ServerRepository serverRepository;
 
-    private Long initialReserve = null;
+    private Long serverId = null;
 
     @SneakyThrows
     @Override
     public void run() {
-        Server server = this.resourceService.spinServer();
-        if(initialReserve!=null){
-            server.setFree(server.getFree() - initialReserve);
-            this.serverRepository.save(server);
-        }
-        this.resourceService.serverSpinnerMap.put(server.getId(),this);
         synchronized (this) {
             this.wait(20000);
         }
-
-        server.setServerState(ServerState.ACTIVE);
-        this.serverRepository.save(server);
-        this.resourceService.serverSpinnerMap.remove(server.getId());
+        this.resourceService.serverIsReady(this.serverId);
     }
 }
