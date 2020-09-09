@@ -8,8 +8,8 @@
 
 # My solution
 technologies : 
-  Spring [  [ DI,IOC \] ], 
-  Spring Data Jpa [ [ simulation of the cloud \] ],
-  Spring AOP [ logging , thread managment ],
-  Spring REST [  [ api for clients 'localhost:9090/{numberOfGiga}' \] ]
+-  Spring [  [ DI,IOC  ], 
+-  Spring Data Jpa [ simulation of the cloud ],
+-  Spring AOP [ logging , thread managment ],
+-  Spring REST [   api for clients 'localhost:9090/{numberOfGiga}'  ]
   
